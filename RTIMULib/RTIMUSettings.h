@@ -43,6 +43,8 @@
 #define RTIMULIB_AXIS_ROTATION              "AxisRotation"
 #define RTIMULIB_PRESSURE_TYPE              "PressureType"
 #define RTIMULIB_I2C_PRESSUREADDRESS        "I2CPressureAddress"
+#define RTIMULIB_HUMIDITY_TYPE              "HumidityType"
+#define RTIMULIB_I2C_HUMIDITYADDRESS        "I2CHumidityAddress"
 
 //  MPU9150 settings keys
 
@@ -183,6 +185,11 @@ public:
 
     bool discoverPressure(int& pressureType, unsigned char& pressureAddress);
 
+    //  This function tries to find a humidity sensor. It stops at the first valid one
+    //  and returns true or else false
+
+    bool discoverHumidity(int& humidityType, unsigned char& humidityAddress);
+
     //  This function sets the settings to default values.
 
     void setDefaults();
@@ -203,6 +210,8 @@ public:
     int m_axisRotation;                                     // axis rotation code
     int m_pressureType;                                     // type code of pressure sensor in use
     unsigned char m_I2CPressureAddress;                     // I2C slave address of the pressure sensor
+    int m_humidityType;                                     // type code of humidity sensor in use
+    unsigned char m_I2CHumidityAddress;                     // I2C slave address of the humidity sensor
 
     bool m_compassCalValid;                                 // true if there is valid compass calibration data
     RTVector3 m_compassCalMin;                              // the minimum values
