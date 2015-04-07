@@ -37,6 +37,8 @@
 #include "IMUDrivers/RTPressureBMP180.h"
 #include "IMUDrivers/RTPressureLPS25H.h"
 
+#include "IMUDrivers/RTHumidityHTS221.h"
+
 #define RATE_TIMER_INTERVAL 2
 
 RTIMUSettings::RTIMUSettings(const char *productType)
@@ -356,6 +358,28 @@ bool RTIMUSettings::discoverPressure(int& pressureType, unsigned char& pressureA
     return false;
 }
 
+bool RTIMUSettings::discoverHumidity(int& humidityType, unsigned char& humidityAddress)
+{
+    unsigned char result;
+
+    //  auto detect on current bus
+
+    if (HALOpen()) {
+
+        if (HALRead(HTS221_ADDRESS, HTS221_REG_ID, 1, &result, "")) {
+            if (result == HTS221_ID) {
+                humidityType = RTHUMIDITY_TYPE_HTS221;
+                humidityAddress = HTS221_ADDRESS;
+                HAL_INFO("Detected HTS221 at standard address\n");
+                return true;
+            }
+        }
+
+    }
+    HAL_ERROR("No humidity sensor detected\n");
+    return false;
+}
+
 void RTIMUSettings::setDefaults()
 {
     //  preset general defaults
@@ -371,6 +395,8 @@ void RTIMUSettings::setDefaults()
     m_axisRotation = RTIMU_XNORTH_YEAST;
     m_pressureType = RTPRESSURE_TYPE_AUTODISCOVER;
     m_I2CPressureAddress = 0;
+    m_humidityType = RTHUMIDITY_TYPE_AUTODISCOVER;
+    m_I2CHumidityAddress = 0;
     m_compassCalValid = false;
     m_compassCalEllipsoidValid = false;
     for (int i = 0; i < 3; i++) {
@@ -521,6 +547,10 @@ bool RTIMUSettings::loadSettings()
             m_pressureType = atoi(val);
         } else if (strcmp(key, RTIMULIB_I2C_PRESSUREADDRESS) == 0) {
             m_I2CPressureAddress = atoi(val);
+		} else if (strcmp(key, RTIMULIB_HUMIDITY_TYPE) == 0) {
+            m_humidityType = atoi(val);
+        } else if (strcmp(key, RTIMULIB_I2C_HUMIDITYADDRESS) == 0) {
+            m_I2CHumidityAddress = atoi(val);
 
         // compass calibration and adjustment
 
@@ -845,6 +875,19 @@ bool RTIMUSettings::saveSettings()
     setComment("");
     setComment("I2C pressure sensor address (filled in automatically by auto discover) ");
     setValue(RTIMULIB_I2C_PRESSUREADDRESS, m_I2CPressureAddress);
+
+	setBlank();
+    setComment("Humidity sensor type - ");
+    setComment("  0 = Auto discover");
+    setComment("  1 = Null (no hardware or don't use)");
+    setComment("  2 = HTS221");
+
+    setValue(RTIMULIB_HUMIDITY_TYPE, m_humidityType);
+
+    setBlank();
+    setComment("");
+    setComment("I2C humidity sensor address (filled in automatically by auto discover) ");
+    setValue(RTIMULIB_I2C_HUMIDITYADDRESS, m_I2CHumidityAddress);
 
     //  Compass settings
 
